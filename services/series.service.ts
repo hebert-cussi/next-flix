@@ -33,7 +33,15 @@ export class SeriesService {
       }
       
       const data = await response.json();
-      return data;
+      return (data || []).map((serie: any) => ({
+        ...serie,
+        calificacion: serie.calificacion !== undefined ? serie.calificacion : 0,
+        platforma: serie.platforma || 'No especificada',
+        titulo: serie.titulo || 'Sin título',
+        sinopsis: serie.sinopsis || 'Sin descripción',
+        genero: serie.genero || 'Sin género',
+        estreno: serie.estreno || new Date().getFullYear(),
+      }));
     } catch (error) {
       console.error('Error en getAllSeries:', error);
       throw error;
@@ -47,7 +55,11 @@ export class SeriesService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(serie),
+        body: JSON.stringify({
+          ...serie,
+          calificacion: serie.calificacion || 5,
+          plataforma: serie.plataforma || 'No especificada',
+        }),
       });
       
       if (!response.ok) {

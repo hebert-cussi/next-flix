@@ -7,7 +7,7 @@ import { useForm } from '@/hooks/use-form';
 import { SerieSchema, SerieFormData } from '@/validations/series.schema';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-
+import { PLATAFORMAS } from '@/interfaces/series.interface';
 interface SerieFormProps {
   onSubmit: (data: SerieFormData) => Promise<void>;
 }
@@ -32,6 +32,7 @@ export const SerieForm = ({ onSubmit }: SerieFormProps) => {
     handleChange,
     handleSubmit,
     resetForm,
+    setFieldValue,
   } = useForm({
     initialValues,
     schema: SerieSchema,
@@ -106,6 +107,28 @@ export const SerieForm = ({ onSubmit }: SerieFormProps) => {
 
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none">
+              Plataforma
+            </label>
+            <select
+              name="plataforma"
+              value={values.plataforma || ''}
+              onChange={handleChange}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Seleccionar plataforma</option>
+              {PLATAFORMAS.map((platform) => (
+                <option key={platform.id} value={platform.name}>
+                  {platform.icon} {platform.name}
+                </option>
+              ))}
+            </select>
+            {errors.plataforma && (
+              <p className="text-sm text-red-500">{errors.plataforma}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
               Calificación * (0-10)
             </label>
             <div className="flex items-center space-x-4">
@@ -137,7 +160,7 @@ export const SerieForm = ({ onSubmit }: SerieFormProps) => {
             placeholder="https://ejemplo.com/imagen.jpg"
           />
 
-          <Input
+          {/* <Input
             label="Plataforma *"
             name="plataforma"
             value={values.plataforma}
@@ -145,7 +168,7 @@ export const SerieForm = ({ onSubmit }: SerieFormProps) => {
             error={errors.plataforma}
             placeholder="Ej: netflix"
             required
-          />
+          /> */}
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button

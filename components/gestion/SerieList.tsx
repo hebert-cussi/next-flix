@@ -1,10 +1,11 @@
 'use client';
 
-import { Serie } from '@/interfaces/series.interface';
+import { Serie, PLATAFORMAS } from '@/interfaces/series.interface';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Star, Calendar, Film, Eye } from 'lucide-react';
+import { Trash2, Star, Calendar, Film, Eye, Info, Monitor } from 'lucide-react';
 import { useState } from 'react';
+import { SerieDetails } from './SerieDetails'
 
 interface SerieListProps {
   series: Serie[];
@@ -14,6 +15,8 @@ interface SerieListProps {
 
 export const SerieList = ({ series, loading, onDelete }: SerieListProps) => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedSerie, setSelectedSerie] = useState<Serie | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const handleDelete = async (id: string) => {
     if (!id) return;
@@ -26,6 +29,11 @@ export const SerieList = ({ series, loading, onDelete }: SerieListProps) => {
         setDeletingId(null);
       }
     }
+  };
+
+  const handleViewDetails = (serie: Serie) => {
+    setSelectedSerie(serie);
+    setDetailsOpen(true);
   };
 
   if (loading) {
@@ -58,8 +66,7 @@ export const SerieList = ({ series, loading, onDelete }: SerieListProps) => {
       </div>
     );
   }
-
-  // Función para obtener el color de calificación
+  
   const getRatingColor = (rating: number | undefined) => {
     const ratingValue = rating || 0;
     if (ratingValue >= 8) return 'text-green-600 bg-green-50';
@@ -67,29 +74,47 @@ export const SerieList = ({ series, loading, onDelete }: SerieListProps) => {
     if (ratingValue >= 4) return 'text-orange-600 bg-orange-50';
     return 'text-red-600 bg-red-50';
   };
-
-  // Función para formatear rating
+  
   const formatRating = (rating: number | undefined) => {
     if (rating === undefined || rating === null) return 'N/A';
     return rating.toFixed(1);
   };
 
+  const getPlatformIcon = (platformName?: string) => {
+    const platform = PLATAFORMAS.find(p => p.name === platformName);
+    if (platform) {
+      return {
+        icon: platform.icon,
+        color: platform.color,
+        name: platform.name
+      };
+    }
+    return {
+      icon: '📺',
+      color: '#6B7280',
+      name: platformName || 'No especificada'
+    };
+  };
+
   return (
+    <>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {series.map((serie) => (
+      {series.map((serie) => {
+        const platformInfo = getPlatformIcon(serie.plataforma);
+        return( 
         <Card 
           key={serie.id || Math.random()} 
           className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
         >
           {/* Imagen de la serie */}
-          <div className="relative h-56 bg-gradient-to-br from-secondary to-primary/20 overflow-hidden">
+          <div className="relative h-56 bg-gradient-to-br from-secondary to-primary/20 overflow-hidden cursor-pointer" onClick={() => handleViewDetails(serie)}>
+          
             {serie.urlPortada ? (
               <img
                 src={serie.urlPortada}
                 alt={serie.titulo || 'Serie'}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                onError={(e) => {
-                  // Si la imagen falla, mostrar placeholder
+                onError={(e) => {                  
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   const parent = target.parentElement;
@@ -114,11 +139,28 @@ export const SerieList = ({ series, loading, onDelete }: SerieListProps) => {
                 <span>{formatRating(serie.calificacion)}</span>
               </div>
             </div>
+           {/* Badge de plataforma */}
+            {serie.plataforma && (
+              <div 
+                className="absolute bottom-3 left-3 px-2 py-1 rounded-full text-xs font-semibold text-white shadow-lg"
+                style={{ backgroundColor: platformInfo.color }}
+              >
+               <div className="flex items-center space-x-1">
+                <span>{platformInfo.icon}</span>
+                  <span>{platformInfo.name}</span>
+                </div>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div  className="bg-white/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                <Info className="h-6 w-6 text-primary" />
+              </div>
+          </div>
           </div>
           
           <CardHeader className="pb-2">
             <CardTitle className="flex justify-between items-start gap-2">
-              <span className="text-lg line-clamp-1 flex-1">
+              <span className="text-lg line-clamp-1 flex-1 cursor-pointer hover:text-primary transition-colors" onClick={() => handleViewDetails(serie)}>
                 {serie.titulo || 'Sin título'}
               </span>
               {serie.id && (
@@ -153,23 +195,45 @@ export const SerieList = ({ series, loading, onDelete }: SerieListProps) => {
                 <span>{serie.estreno || 'N/A'}</span>
               </div>
             </div>
+            {serie.plataforma && (
+                  <div className="mt-2 flex items-center space-x-2 text-xs text-gray-500">
+                    <Monitor className="h-3 w-3" />
+                    <span>Disponible en: {serie.plataforma}</span>
+                  </div>
+                )}
           </CardContent>
           
           <CardFooter className="pt-2 pb-4">
-            <div className="flex items-center justify-between w-full text-xs text-gray-500">
-              <span className="flex items-center space-x-1">
-                <Eye className="h-3 w-3" />
-                <span>Serie</span>
-              </span>
-              {serie.createdAt && (
-                <span>
-                  Agregada: {new Date(serie.createdAt).toLocaleDateString('es-ES')}
+            <Button
+                variant="outline"
+                size="sm"
+                className="w-full flex items-center justify-center space-x-2 hover:bg-primary hover:text-white transition-colors"
+                onClick={() => handleViewDetails(serie)}
+              >
+              <Eye className="h-4 w-4" />
+              <span>Ver detalles</span>
+              {/* <div className="flex items-center justify-between w-full text-xs text-gray-500">
+                <span className="flex items-center space-x-1">
+                  <Eye className="h-3 w-3" />
+                  <span>Serie</span>
                 </span>
-              )}
-            </div>
+                {serie.createdAt && (
+                  <span>
+                    Agregada: {new Date(serie.createdAt).toLocaleDateString('es-ES')}
+                  </span>
+                )}
+              </div> */}
+            </Button>
           </CardFooter>
         </Card>
-      ))}
+        )
+      })}
     </div>
+    <SerieDetails
+        serie={selectedSerie}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
+    </>
   );
 };
