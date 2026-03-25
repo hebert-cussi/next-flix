@@ -12,7 +12,7 @@ export interface Serie {
 }
 
 export interface CreateSerieDTO extends Omit<Serie, 'id' | 'createdAt' | 'updatedAt'> {
-  rating: number; // En creación sí es requerido
+  calificacion: number; // En creación sí es requerido
 }
 
 export interface ApiResponse<T> {
